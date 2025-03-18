@@ -23,12 +23,40 @@ subplot(2,2,2); imshow(im(:,:,:,9)); title('Image 9');
 subplot(2,2,3); imshow(im(:,:,:,17)); title('Image 17');
 subplot(2,2,4); imshow(im(:,:,:,25)); title('Image 25');
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A COMPLETER                                             %
 % Calculs des superpixels                                 % 
 % Conseil : afficher les germes + les régions             %
 % à chaque étape / à chaque itération                     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+image = im(:,:,:,1);
+N = size(image,1) * size(image,2);
+k = 400;
+S = round(sqrt(N/k));
+
+centers = zeros(round(size(image,1)/S), round(size(image,2)/S), 2);
+centers(1,:,2) = round(S/2);
+centers(:,1,1) = round(S/2);
+for i=1:size(centers,1)
+    for j=1:size(centers,2)
+        if j ~= 1
+            centers(i,j,1) = centers(i,j-1,1) + S;
+        else
+            if i ~= 1
+                centers(i,j,2) = centers(i-1,j,2) + S;
+            end
+        end
+        if i ~= 1
+            centers(i,j,2) = centers(i-1,j,2) + S;
+        else
+            if j ~=1
+                centers(i,j,1) = centers(i,j-1,1) + S;
+            end
+        end
+    end
+end
+centers = reshape(centers(:),[],2);
 
 % ........................................................%
 
