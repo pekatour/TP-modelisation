@@ -34,10 +34,12 @@ image = im(:,:,:,1);
 N = size(image,1) * size(image,2);
 k = 400;
 S = round(sqrt(N/k));
+max_iter = 5;
 
-centers = zeros(round(size(image,1)/S), round(size(image,2)/S), 2);
-centers(1,:,2) = round(S/2);
-centers(:,1,1) = round(S/2);
+% initialiser centres
+centers = zeros(floor(size(image,2)/S), floor(size(image,1)/S), 5);
+centers(1,:,2) = floor(S/2);
+centers(:,1,1) = floor(S/2);
 for i=1:size(centers,1)
     for j=1:size(centers,2)
         if j ~= 1
@@ -56,7 +58,42 @@ for i=1:size(centers,1)
         end
     end
 end
-centers = reshape(centers(:),[],2);
+for i=1:size(centers,1)
+    for j=1:size(centers,2)
+        centers(i,j,3:5) = image(centers(i,j,1),centers(i,j,2),:);
+    end
+end
+centers = reshape(centers(:),[],5);
+copie = centers(:,1);
+centers(:,1) = centers(:,2);
+centers(:,2) = copie;
+
+% affichage des centres initiaux
+figure('Name',['Centres kmeans']);
+
+% Affichage de la configuration initiale :
+imshow(image);
+hold on;
+axis image;
+axis off;
+plot(centers(:,1),centers(:,2),'+','Color',"red",'LineWidth',1);
+hold off;
+pause(1);
+% kmeans
+[bestLabels, all_centers] = kmeans(image,centers,3,max_iter);
+
+
+% affichage des itérations
+for i=1:max_iter
+    hold off;
+    imshow(image);
+    axis image;
+    axis off;
+    hold on;
+    plot(all_centers(:,1,i),all_centers(:,2,i),'+','Color',"red",'LineWidth',1);
+    pause(0.5);
+end
+
 
 % ........................................................%
 
