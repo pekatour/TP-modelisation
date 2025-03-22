@@ -9,17 +9,19 @@ function [bestLabels, all_centers] = kmeans(im,centers,m,max_iter)
         sommes = zeros(k,6);
         for i=1:size(im,1)
             for j=1:size(im,2)
-                distances = sum((double(centers(:,1:2)) - repmat(double([i j]),k, 1)).^2,2) .* m + ...
-                    sum((double(centers(:,3:5)) - repmat(double(reshape(im(i,j,:),[1 3])),k, 1)).^2,2);
+                distances = sqrt(sum((double(centers(:,1:2)) - repmat(double([i j]),k, 1)).^2,2)) .* m + ...
+                    sqrt(sum((double(centers(:,3:5)) - repmat(double(reshape(im(i,j,:),[1 3])),k, 1)).^2,2));
                 [mini,ind] = min(distances);
                 bestLabels(i,j,it) = ind;
 
                 sommes(ind,1) = double(sommes(ind,1) + 1);
-                sommes(ind,2:6) = double(sommes(ind,2:6)) + double([i j reshape(im(i,j,:),[1 3])]);
+                sommes(ind,2:6) = double(sommes(ind,2:6)) + [double(i) double(j) double(reshape(im(i,j,:),[1 3]))];
             end
         end
-
+        sommes(k-5,2:6);
+        repmat(sommes(k-5,1),1,5);
         centers = sommes(:,2:6) ./ repmat(sommes(:,1),1,5);
+        centers(k-5,:);
         all_centers(:,:,it) = centers;
     end
 end

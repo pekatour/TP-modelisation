@@ -32,9 +32,10 @@ subplot(2,2,4); imshow(im(:,:,:,25)); title('Image 25');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 image = im(:,:,:,1);
 N = size(image,1) * size(image,2);
-k = 400;
+k = 200;
 S = round(sqrt(N/k));
 max_iter = 5;
+m = 8;
 
 % initialiser centres
 centers = zeros(floor(size(image,2)/S), floor(size(image,1)/S), 5);
@@ -58,15 +59,10 @@ for i=1:size(centers,1)
         end
     end
 end
-for i=1:size(centers,1)
-    for j=1:size(centers,2)
-        centers(i,j,3:5) = image(centers(i,j,1),centers(i,j,2),:);
-    end
-end
 centers = reshape(centers(:),[],5);
-copie = centers(:,1);
-centers(:,1) = centers(:,2);
-centers(:,2) = copie;
+for i=1:size(centers,1)
+   centers(i,3:5) = image(centers(i,1),centers(i,2),:);
+end
 
 % affichage des centres initiaux
 figure('Name',['Centres kmeans']);
@@ -76,22 +72,40 @@ imshow(image);
 hold on;
 axis image;
 axis off;
-plot(centers(:,1),centers(:,2),'+','Color',"red",'LineWidth',1);
+plot(centers(:,2),centers(:,1),'+','Color',"red",'LineWidth',1);
 hold off;
 pause(1);
 % kmeans
-[bestLabels, all_centers] = kmeans(image,centers,3,max_iter);
+[bestLabels, all_centers] = kmeans(image,centers,m,max_iter);
 
 
 % affichage des itérations
-for i=1:max_iter
+for p=1:max_iter
     hold off;
     imshow(image);
     axis image;
     axis off;
     hold on;
-    plot(all_centers(:,1,i),all_centers(:,2,i),'+','Color',"red",'LineWidth',1);
-    pause(0.5);
+    
+    % affichage superpixels
+    superpixels = [];
+    for i=1:size(bestLabels,1)
+        for j=1:size(bestLabels,2)
+            current_value = bestLabels(i,j, p);
+            if (i > 1 && bestLabels(i-1, j, p) ~= current_value) || ...  % Haut
+               (i < size(centers,1) && bestLabels(i+1, j, p) ~= current_value) || ... % Bas
+               (j > 1 && bestLabels(i, j-1, p) ~= current_value) || ...  % Gauche
+               (j < size(centers,2) && bestLabels(i, j+1, p) ~= current_value)       % Droite
+                superpixels = [superpixels; [i,j]];
+            end
+        end
+    end
+    plot(superpixels(:,2),superpixels(:,1),'.','Color',"green",'MarkerSize',0.1);
+    title("Itération : ", sprintf('%d',p));
+
+    % affichage germes
+    plot(all_centers(:,2,p),all_centers(:,1,p),'+','Color',"red",'LineWidth',1);
+    pause(1);
 end
 
 
