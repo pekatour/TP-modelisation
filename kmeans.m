@@ -18,10 +18,7 @@ function [bestLabels, all_centers] = kmeans(im,centers,m,max_iter)
                 sommes(ind,2:6) = double(sommes(ind,2:6)) + [double(i) double(j) double(reshape(im(i,j,:),[1 3]))];
             end
         end
-        sommes(k-5,2:6);
-        repmat(sommes(k-5,1),1,5);
         centers = sommes(:,2:6) ./ repmat(sommes(:,1),1,5);
-        centers(k-5,:);
         all_centers(:,:,it) = centers;
     end
 end
