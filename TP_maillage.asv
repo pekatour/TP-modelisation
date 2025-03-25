@@ -34,8 +34,8 @@ image = im(:,:,:,1);
 N = size(image,1) * size(image,2);
 k = 100;
 S = round(sqrt(N/k));
-max_iter = 5;
-m = 0.8 * S;
+max_iter = ;
+m = 3;
 
 % initialiser centres
 centers = zeros(floor(size(image,2)/S), floor(size(image,1)/S), 5);
@@ -76,7 +76,7 @@ plot(centers(:,2),centers(:,1),'+','Color',"red",'LineWidth',1);
 hold off;
 pause(1);
 % kmeans
-[bestLabels, all_centers] = kmeans(image,centers,m,max_iter,S);
+[bestLabels, all_centers] = kmeans(image,centers,m,max_iter);
 
 
 % affichage des itérations
