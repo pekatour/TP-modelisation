@@ -34,7 +34,7 @@ image = im(:,:,:,1);
 N = size(image,1) * size(image,2);
 k = 100;
 S = round(sqrt(N/k));
-max_iter = 5;
+max_iter = 2;
 m = 0.8 * S;
 
 % initialiser centres
@@ -68,8 +68,8 @@ end
 figure('Name',['Centres kmeans']);
 
 % Affichage de la configuration initiale :
-imshow(image);
 hold on;
+imshow(image);
 axis image;
 axis off;
 plot(centers(:,2),centers(:,1),'+','Color',"red",'LineWidth',1);
@@ -78,14 +78,12 @@ pause(1);
 % kmeans
 [bestLabels, all_centers] = kmeans(image,centers,m,max_iter,S);
 
-
 % affichage des itérations
 for p=1:max_iter
-    hold off;
+    hold on;
     imshow(image);
     axis image;
     axis off;
-    hold on;
     
     % affichage superpixels
     superpixels = [];
@@ -105,6 +103,7 @@ for p=1:max_iter
 
     % affichage germes
     plot(all_centers(:,2,p),all_centers(:,1,p),'+','Color',"red",'LineWidth',1);
+    hold off;
     pause(1);
 end
 
@@ -140,16 +139,16 @@ classes = hue>seuil;
 binarise = classes(last_bestLabels);
 imshow(binarise);
 title("HSV");
-pause(3);
+pause(2);
 
 hsv = rgb2lab(last_centers_colors);
 hue = hsv(:,3);
 seuil = graythresh(hue);
 classes = hue>seuil;
 binarise = classes(last_bestLabels);
+hold on;
 imshow(binarise);
 title("LAB");
-pause(3);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -159,17 +158,49 @@ pause(3);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ... 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A DECOMMENTER ET COMPLETER                              %
 % quand vous aurez les images segmentées                  %
 % Affichage des masques associes                          %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% figure;
-% subplot(2,2,1); ... ; title('Masque image 1');
-% subplot(2,2,2); ... ; title('Masque image 9');
-% subplot(2,2,3); ... ; title('Masque image 17');
-% subplot(2,2,4); ... ; title('Masque image 25');
+% déjà fait
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% A DECOMMENTER ET COMPLETER                              %
+% Frontière                                               %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+i = 1;
+j = 1;
+while i < size(binarise,1) && binarise(i,j) ~= 1
+    for j=1:size(binarise,2)
+        if binarise(i,j) == 1
+            pfi = i;
+            pfj = j;
+            break;
+        end
+    end
+    i = i + 1;
+end
+
+contour = bwtraceboundary(binarise,[pfi pfj],'W');
+plot(contour(:,2),contour(:,1),'g','LineWidth',2);
+
+contour_echant = contour(1:10:end,:);
+[vx, vy] = voronoi(contour_echant(:,2), contour_echant(:,1));
+vx_int = [];
+vy_int = [];
+for i=1:size(vx,2)
+    if 0 < floor(vx(1,i)) < size(image,1) && 0 < floor(vy(1,i)) < size(image,2)
+        if binarise(floor(vx(1,i)), floor(vy(1,i))) == 1 || binarise(floor(vx(2,i)), floor(vy(2,i))) == 1
+            vx_int= [vx_int vx(i,1) ; vx(i,2)];
+            vy_int= [vy_int vy(i,1) ; vy(i,2)];
+        end
+    end
+
+end
+plot(vx_int,vy_int,'b','LineWidth',2);
+hold off;
+pause(2);
 
 % chargement des points 2D suivis 
 % pts de taille nb_points x (2 x nb_images)
