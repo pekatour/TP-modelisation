@@ -183,22 +183,42 @@ while i < size(binarise,1) && binarise(i,j) ~= 1
 end
 
 contour = bwtraceboundary(binarise,[pfi pfj],'W');
+img_contour = zeros(size(binarise));
+for i = 1:size(contour(:,1),1)
+    img_contour(contour(i,1),contour(i,2)) = 1;
+end
+
 plot(contour(:,2),contour(:,1),'g','LineWidth',2);
+pause(1);
 
 contour_echant = contour(1:10:end,:);
 [vx, vy] = voronoi(contour_echant(:,2), contour_echant(:,1));
 vx_int = [];
 vy_int = [];
 for i=1:size(vx,2)
-    if 0 < floor(vx(1,i)) < size(image,1) && 0 < floor(vy(1,i)) < size(image,2)
-        if binarise(floor(vx(1,i)), floor(vy(1,i))) == 1 || binarise(floor(vx(2,i)), floor(vy(2,i))) == 1
-            vx_int= [vx_int vx(i,1) ; vx(i,2)];
-            vy_int= [vy_int vy(i,1) ; vy(i,2)];
+    if 0 < floor(vx(1,i)) && floor(vx(1,i)) < size(image,2) && 0 < floor(vy(1,i)) && floor(vy(1,i)) < size(image,1) && ...
+            0 < floor(vx(2,i)) && floor(vx(2,i)) < size(image,2) && 0 < floor(vy(2,i)) && floor(vy(2,i)) < size(image,1)
+        if binarise(floor(vy(1,i)), floor(vx(1,i))) > 0 && binarise(floor(vy(2,i)), floor(vx(2,i))) > 0
+            vx_int= [vx_int [floor(vx(1,i)) ; floor(vx(2,i))]];
+            vy_int= [vy_int [floor(vy(1,i)) ; floor(vy(2,i))]];
         end
     end
 
 end
-plot(vx_int,vy_int,'b','LineWidth',2);
+M = zeros(size(vx_int(:),1), 3);
+M(:,1) = vx_int(:);
+M(:,2) = vy_int(:);
+D = bwdist(img_contour);
+ind = sub2ind(size(D),M(:,2), M(:,1));
+M(:,3) = D(ind);
+
+
+plot(M(:,1),M(:,2),'.','color','m');
+viscircles(M(:,1:2),M(:,3),'color','b', 'LineWidth', 0.5)
+hold off;
+pause(2);
+
+% plot(vx_int,vy_int,'b','LineWidth',2);
 hold off;
 pause(2);
 
