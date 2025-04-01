@@ -1,5 +1,4 @@
-clear;
-close all;
+clear; close all;
 % Nombre d'images utilisees
 nb_images = 36; 
 
@@ -34,9 +33,11 @@ image = im(:,:,:,1);
 N = size(image,1) * size(image,2);
 k = 100;
 S = round(sqrt(N/k));
-max_iter = 2;
+max_iter = 1;
+do_kmeans = 0;
 m = 0.8 * S;
 
+if do_kmeans
 % initialiser centres
 centers = zeros(floor(size(image,2)/S), floor(size(image,1)/S), 5);
 centers(1,:,2) = floor(S/2);
@@ -222,6 +223,8 @@ pause(2);
 hold off;
 pause(2);
 
+end
+
 % chargement des points 2D suivis 
 % pts de taille nb_points x (2 x nb_images)
 % sur chaque ligne de pts 
@@ -274,28 +277,34 @@ axis equal;
 % A COMPLETER                  %
 % Tetraedrisation de Delaunay  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% T = ...                      
+T = DelaunayTri(X(1,:)',X(2,:)',X(3,:)');                     
 
 % A DECOMMENTER POUR AFFICHER LE MAILLAGE
-% fprintf('Tetraedrisation terminee : %d tetraedres trouves. \n',size(T,1));
+fprintf('Tetraedrisation terminee : %d tetraedres trouves. \n',size(T,1));
 % Affichage de la tetraedrisation de Delaunay
-% figure;
-% tetramesh(T);
+%figure;
+%tetramesh(T);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A DECOMMENTER ET A COMPLETER %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Calcul des barycentres de chacun des tetraedres
-% poids = ... 
-% nb_barycentres = ... 
-% for i = 1:size(T,1)
+poids = [1/2 1/6 1/6 1/6; 1/6 1/2 1/6 1/6; 1/6 1/6 1/2 1/6; 1/6 1/6 1/6 1/2];
+%poids = [1/4 1/4 1/4 1/4];
+nb_barycentres = size(poids,1);
+C_g = zeros(4,size(T,1),nb_barycentres);
+for i = 1:size(T,1)
     % Calcul des barycentres differents en fonction des poids differents
-    % En commencant par le barycentre avec poids uniformes
-%     C_g(:,i,1)=[ ...
+    for k = 1:nb_barycentres
+        C_g(1:3,i,k)=sum(repmat(poids(k,:)',1,3) .* T.X(T.Triangulation(i,:),:),1);
+        C_g(4,i,k) = 1;
+    end
+end
 
 % A DECOMMENTER POUR VERIFICATION 
 % A RE-COMMENTER UNE FOIS LA VERIFICATION FAITE
-% Visualisation pour vérifier le bon calcul des barycentres
+% Visualisation pour vérifier le bon calcul des barycentres*
+%load mask;
 % for i = 1:nb_images
 %    for k = 1:nb_barycentres
 %        o = P{i}*C_g(:,:,k);
@@ -312,21 +321,42 @@ axis equal;
 % A DECOMMENTER ET A COMPLETER %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Copie de la triangulation pour pouvoir supprimer des tetraedres
-% tri=T.Triangulation;
+tri=T.Triangulation;
 % Retrait des tetraedres dont au moins un des barycentres 
 % ne se trouvent pas dans au moins un des masques des images de travail
 % Pour chaque barycentre
-% for k=1:nb_barycentres
-% ...
+load mask;
+
+for t = size(tri,1):-1:1
+    fini_t = 0;
+    for i=1:size(im_mask,3)
+        for k=1:nb_barycentres
+            o = P{i}*C_g(:,t,k);
+            o = o./o(3,1);
+            if 0 < floor(o(1)) && floor(o(1)) < size(im_mask,1) && 0 < floor(o(2)) && floor(o(2)) < size(im_mask,2)
+                if im_mask(floor(o(1)),floor(o(2)),i) == 0
+                    tri(t,:) = [];
+                    fini_t = 1;
+                end
+            end
+            if fini_t
+                break;
+            end
+        end
+        if fini_t
+            break;
+        end
+    end
+end
 
 % A DECOMMENTER POUR AFFICHER LE MAILLAGE RESULTAT
 % Affichage des tetraedres restants
-% fprintf('Retrait des tetraedres exterieurs a la forme 3D termine : %d tetraedres restants. \n',size(Tbis,1));
-% figure;
-% trisurf(tri,X(1,:),X(2,:),X(3,:));
+fprintf('Retrait des tetraedres exterieurs a la forme 3D termine : %d tetraedres restants. \n',size(tri,1));
+figure;
+trisurf(tri,X(1,:),X(2,:),X(3,:));
 
 % Sauvegarde des donnees
-% save donnees;
+save donnees;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CONSEIL : A METTRE DANS UN AUTRE SCRIPT %
