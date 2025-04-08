@@ -9,10 +9,7 @@ function [bestLabels, all_centers] = kmeans(im,centers,m,max_iter,S)
         sommes = zeros(k,6);
         for i=1:size(im,1)
             for j=1:size(im,2)
-                %c_proches = sqrt(sum((double(centers(:,1:2)) - repmat(double([i j]),k, 1)).^2,2)) < S;
                 c_proches = (centers(:,1) < (i + S)) .* (centers(:,1) > (i - S)) .* (centers(:,2) > (j - S)) .* (centers(:,2) < (j + S));
-                %distances = sqrt(sum((double(centers(c_proches,1:2)) - repmat(double([i j]),k, 1)).^2,2)) .* m + ...
-                %    sqrt(sum((double(centers(c_proches,3:5)) - repmat(double(reshape(im(i,j,:),[1 3])),k, 1)).^2,2));
                 mini = inf;
                 ind = -1;
                 for l=1:size(centers,1)

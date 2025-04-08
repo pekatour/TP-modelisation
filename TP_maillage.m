@@ -223,6 +223,7 @@ pause(2);
 hold off;
 pause(2);
 
+% correspond au if do_kmeans
 end
 
 % chargement des points 2D suivis 
@@ -327,27 +328,24 @@ tri=T.Triangulation;
 % Pour chaque barycentre
 load mask;
 
-for t = size(tri,1):-1:1
-    fini_t = 0;
-    for i=1:size(im_mask,3)
-        for k=1:nb_barycentres
-            o = P{i}*C_g(:,t,k);
-            o = o./o(3,1);
-            if 0 < floor(o(1)) && floor(o(1)) < size(im_mask,1) && 0 < floor(o(2)) && floor(o(2)) < size(im_mask,2)
-                if im_mask(floor(o(1)),floor(o(2)),i) == 0
-                    tri(t,:) = [];
-                    fini_t = 1;
+garder = ones(size(tri,1),1);
+for i=1:size(im_mask,3)
+    for t = 1:size(tri,1)
+        if garder(t,1)
+            for k=1:nb_barycentres
+                o = P{i}*C_g(:,t,k);
+                o = o./o(3,1);
+                if 0 < floor(o(1)) && floor(o(1)) < size(im_mask,1) && 0 < floor(o(2)) && floor(o(2)) < size(im_mask,2)
+                    if im_mask(floor(o(1)),floor(o(2)),i) == 1
+                       garder(t,1) = 0;
+                    end
                 end
             end
-            if fini_t
-                break;
-            end
-        end
-        if fini_t
-            break;
         end
     end
 end
+garder = boolean(garder);
+tri = tri(garder,:);
 
 % A DECOMMENTER POUR AFFICHER LE MAILLAGE RESULTAT
 % Affichage des tetraedres restants
@@ -357,22 +355,3 @@ trisurf(tri,X(1,:),X(2,:),X(3,:));
 
 % Sauvegarde des donnees
 save donnees;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CONSEIL : A METTRE DANS UN AUTRE SCRIPT %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% load donnees;
-% Calcul des faces du maillage à garder
-% FACES = ...;
-% ...
-
-% fprintf('Calcul du maillage final termine : %d faces. \n',size(FACES,1));
-
-% Affichage du maillage final
-% figure;
-% hold on
-% for i = 1:size(FACES,1)
-%    plot3([X(1,FACES(i,1)) X(1,FACES(i,2))],[X(2,FACES(i,1)) X(2,FACES(i,2))],[X(3,FACES(i,1)) X(3,FACES(i,2))],'r');
-%    plot3([X(1,FACES(i,1)) X(1,FACES(i,3))],[X(2,FACES(i,1)) X(2,FACES(i,3))],[X(3,FACES(i,1)) X(3,FACES(i,3))],'r');
-%    plot3([X(1,FACES(i,3)) X(1,FACES(i,2))],[X(2,FACES(i,3)) X(2,FACES(i,2))],[X(3,FACES(i,3)) X(3,FACES(i,2))],'r');
-% end;
